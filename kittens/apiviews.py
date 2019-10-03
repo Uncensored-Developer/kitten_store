@@ -8,28 +8,44 @@ from .serializers import KittenSerializer
 @api_view(['GET', 'DELETE', 'PUT'])
 def get_delete_update_kitten(request, pk):
     try:
-        puppy = Kitten.objects.get(pk=pk)
+        kitten = Kitten.objects.get(pk=pk)
     except Kitten.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    # get details of a single puppy
+    # get details of a single kitten
     if request.method == 'GET':
-        return Response({})
-    # delete a single puppy
+        serializer = KittenSerializer(kitten)
+        return Response(serializer.data)
+    # delete a single kitten
     elif request.method == 'DELETE':
-        return Response({})
-    # update details of a single puppy
+        kitten.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    # update details of a single kitten
     elif request.method == 'PUT':
-        return Response({})
+        serializer = KittenSerializer(kitten, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'POST'])
 def get_post_kittens(request):
-    # get all puppies
+    # get all kittens
     if request.method == 'GET':
         puppies = Kitten.objects.all()
         serializer = KittenSerializer(puppies, many=True)
         return Response(serializer.data)
-    # insert a new record for a puppy
+    # insert a new record for a kitten
     elif request.method == 'POST':
-        return Response({})
+        data = {
+            'name': request.data['name'],
+            'age': int(request.data['age']),
+            'breed': request.data['breed'],
+            'color': request.data['color']
+        }
+        serializer = KittenSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
